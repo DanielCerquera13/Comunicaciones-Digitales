@@ -56,12 +56,15 @@ public class LZW {
             char c;
             String s;
             ArrayList<Integer> outputCodes = new ArrayList<>();
+            ArrayList<String> binaryCodes = new ArrayList<>();
+            
 
             System.out.print("Comprimiendo...");
             FileInputStream fileInputStream = new FileInputStream(fileName);
-            InputStreamReader reader = new InputStreamReader(fileInputStream, "utf-8");
+            InputStreamReader reader = new InputStreamReader(fileInputStream, "US-ASCII");
             FileOutputStream fileOutputStream = new FileOutputStream(fileName + "1.lzw");
             ObjectOutputStream outputStream = new ObjectOutputStream(fileOutputStream);
+            
 
             s = (char) reader.read() + "";
             while ((code = (int) reader.read()) != -1) {
@@ -72,7 +75,11 @@ public class LZW {
                     outputStream.writeInt(codeword);
                     comprimirDiccionario.put(s + c, ++lastcode);
                     outputCodes.add(codeword);
+                    String word = Integer.toBinaryString(codeword);
+                    binaryCodes.add(word+ "");      
+                                 
                     s = "" + c;
+                    
                 } else {
                     s = s + c;
                 }
@@ -80,8 +87,10 @@ public class LZW {
             }
             
             
-
-            outputCodes.add(Integer.parseInt(comprimirDiccionario.get(s).toString()));
+            int phraseCode=Integer.parseInt(comprimirDiccionario.get(s).toString());             
+            outputCodes.add(phraseCode);
+            binaryCodes.add(Integer.toBinaryString(phraseCode));
+           
             codeword = Integer.parseInt(comprimirDiccionario.get(s).toString());
             outputStream.writeInt(codeword);
             outputStream.writeInt(00);
@@ -92,6 +101,8 @@ public class LZW {
             System.out.println("\n"+comprimirDiccionario);
             System.out.println(outputCodes);
             System.out.println(outputCodes.size());
+            System.out.println(binaryCodes);
+            System.out.println(binaryCodes.size());            
             System.out.print("\nHecho!!!");
            
 
