@@ -11,29 +11,42 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+
+// Clase LZW 
 public class LZW {
 
-    public HashMap comprimirDiccionario;
-    public HashMap descomprimirDiccionario;
-    String fileName = "files/texto.txt";
-    int lastcode = 0;
+    public HashMap comprimirDiccionario; // Se crea un HashMap llamado comprimirDiccionario en el cual se agregan los códigos de compresión
+    public HashMap descomprimirDiccionario; // Se crea un HashMap llamadode descomprimirDiccionario en el cual se agregan los códigos de descompresión
+    String fileName = "files/texto.txt"; //fileName equivale a la ruta donde se encuentra el archivo original que va a ser comprimido
+    int lastcode = 0; 
     int dlastcode = 0;
 
     LZW() {
-        comprimirDiccionario = new HashMap<String, Integer>();
+    	
+    	//Inicialización de las variables comprimirDiccionario y descomprimirDiccionario
+        comprimirDiccionario = new HashMap<String, Integer>(); 
         descomprimirDiccionario = new HashMap<Integer, String>();
         crearDiccionario();
     }
 
+    // Método crearDiccionario, que como su nombre lo indica en este se extraen los códigos del archivo original y se agregan a un HashMap para realizar 
+    // cada uno de los procesos (compresión y descompresión)
     public void crearDiccionario() {
         try {
             int code;
             char ch;
-            FileInputStream fileInputStream = new FileInputStream(fileName);
-            InputStreamReader reader = new InputStreamReader(fileInputStream, "utf-8");
+            FileInputStream fileInputStream = new FileInputStream(fileName); //Es el encargado de extraer la ruta del archivo original para posteriormente ser leído.
+            																 //Se pasa por parámetro la ruta definida anteriormente en las variables
+            
+            InputStreamReader reader = new InputStreamReader(fileInputStream, "utf-8"); //Se encargada de leer el archivo anteriormente cargado en FileInputStream, 
+            																			//Esta lectura se hace mediante el formato utf-8
+            
+            //Ciclo que agrega los códigos al diccionario cada que va realizando la lectura del archivo
             while ((code = (int) reader.read()) != -1) {
                 ch = (char) code;
 
+                // En caso de que el código no se encuentre agragado en el HashMap correspondiente al diccionario, ya sea para comprimir o descomprimir,
+                // se agrega ese nuevo código
                 if (!comprimirDiccionario.containsKey(ch)) {
                     comprimirDiccionario.put("" + ch, code);
                     descomprimirDiccionario.put(code, "" + ch);
@@ -49,60 +62,88 @@ public class LZW {
         }
     }
 
+    
+    // Método para comprimir el archivo original
     public void comprimirArchivo() {
         try {
+        	
+        	//Creación de variables
             int code; 
             int codeword;
-            char c;
-            String s;
-            ArrayList<Integer> outputCodes = new ArrayList<>();
-            ArrayList<String> binaryCodes = new ArrayList<>();
+            char ch;
+            String string;
+            
+            ArrayList<Integer> outputCodes = new ArrayList<>(); //ArrayList que hace referencia a los códigos de salida al comprimir el archivp
+            ArrayList<String> binaryCodes = new ArrayList<>();  //ArrayList que hace referencia a los códigos de salida, pero esta vez en formato binario.
             
 
             System.out.print("Comprimiendo...");
-            FileInputStream fileInputStream = new FileInputStream(fileName);
-            InputStreamReader reader = new InputStreamReader(fileInputStream, "US-ASCII");
-            FileOutputStream fileOutputStream = new FileOutputStream(fileName + "1.lzw");
-            ObjectOutputStream outputStream = new ObjectOutputStream(fileOutputStream);
-            
+            FileInputStream fileInputStream = new FileInputStream(fileName); //Al igual que en el método crearDiccionario, se extrae la ruta del archivo original.
+            InputStreamReader reader = new InputStreamReader(fileInputStream, "US-ASCII"); //Realiza la lectura del archivo anteriormente cargado.
+            FileOutputStream fileOutputStream = new FileOutputStream(fileName + "1.lzw"); //Se crea un nuevo archivo formato .lzw en el cual se va a guardar el archivo comprimido.
+            ObjectOutputStream outputStream = new ObjectOutputStream(fileOutputStream); //Escribe la salida del método en el archivo anteriormente creado (.lzw)
+           
 
-            s = (char) reader.read() + "";
+            //Se agregan los códigos al archivo para obtener la compresión adecuada
+            string = (char) reader.read() + "";
             while ((code = (int) reader.read()) != -1) {
-                c = (char) code;
+                ch = (char) code;
 
-                if (!comprimirDiccionario.containsKey(s + c)) {
-                    codeword = Integer.parseInt(comprimirDiccionario.get(s).toString());
+                if (!comprimirDiccionario.containsKey(string + ch)) {
+                    codeword = Integer.parseInt(comprimirDiccionario.get(string).toString());
                     outputStream.writeInt(codeword);
-                    comprimirDiccionario.put(s + c, ++lastcode);
-                    outputCodes.add(codeword);
-                    String word = Integer.toBinaryString(codeword);
-                    binaryCodes.add(word+ "");      
-                                 
-                    s = "" + c;
+                    
+                    comprimirDiccionario.put(string + ch, ++lastcode);
+                    outputCodes.add(codeword); //Se agrega cada una de las salidas del cógido
+                    String word = Integer.toBinaryString(codeword); //Se convierte la palabra código a binario.
+                    binaryCodes.add(word+ ""); //Se agrega cada uno de los códigos anteriormente pasados a binarios, que corresponde a la salida del código.  
+                         
+                    string = "" + ch;
                     
                 } else {
-                    s = s + c;
+                    string = string + ch;
                 }
                 
             }
             
             
-            int phraseCode=Integer.parseInt(comprimirDiccionario.get(s).toString());             
-            outputCodes.add(phraseCode);
-            binaryCodes.add(Integer.toBinaryString(phraseCode));
-           
-            codeword = Integer.parseInt(comprimirDiccionario.get(s).toString());
-            outputStream.writeInt(codeword);
+            int phraseCode=Integer.parseInt(comprimirDiccionario.get(string).toString());             
+            outputCodes.add(phraseCode); //Se agrega el último código al archivo.
+            
+            binaryCodes.add(Integer.toBinaryString(phraseCode)); //Se agrega el último código de salida, pero en este caso en formato binario.
+            
+            codeword = Integer.parseInt(comprimirDiccionario.get(string).toString());
+            outputStream.writeInt(codeword); //Se escribe la ultima palabra código en el archivo destino.
             outputStream.writeInt(00);
+            
 
             outputStream.close();
             fileInputStream.close();
 
-            System.out.println("\n"+comprimirDiccionario);
-            System.out.println(outputCodes);
-            System.out.println(outputCodes.size());
-            System.out.println(binaryCodes);
-            System.out.println(binaryCodes.size());            
+            System.out.println("\nDICCIONARIO: ");
+            System.out.println(comprimirDiccionario); //Muestra por consola el diccionario obtenido en el proceso de compresión.
+            System.out.println("\nCÓDIGOS DE SALIDA EN DECIMAL");
+            System.out.println(outputCodes); //Se imprime por consola los códigos de salida en formato decimal.
+            System.out.println("\nTAMAÑO DEL ARRAYLIST DE CÓDIGOS DECIMALES");
+            System.out.println(outputCodes.size()); //Se imprime el tamaño del arraylist correspondiente a los códigos de salida en decimal.
+            System.out.println("\nCÓDIGOS DE SALIDA EN BINARIO");
+            System.out.println(binaryCodes); //Se imprime por consola los códigos de salida en formato binario.
+            System.out.println("\nTAMAÑO DEL ARRAYLIST DE CÓDIGOS BINARIOS");
+            System.out.println(binaryCodes.size()); //Se muestra por consola el tamaño del arraylist correspondiente a los códigos de salida en formato binario.
+            
+            String texto ="";
+            for(int i=0; i<binaryCodes.size(); i++) {
+            	
+            	
+            	texto += binaryCodes.get(i);
+            	
+            }
+            
+            
+            
+            System.out.println("\nTEXTO EN BINARIO (1 y 0)");
+            System.out.println(texto);
+            
             System.out.print("\nHecho!!!");
            
 
@@ -111,35 +152,35 @@ public class LZW {
         }
     }
 
+    
+    //Método que descomprime el archivo anteriormente comprimido, para obtener el archivo original
     public void descomprimirArchivo() {
         int priorcode = -1;
         int codeword = -1;
-        char c;
-
         String priorstr; 
-        String str;
-        FileInputStream fileInputStream; 
-        FileWriter writer; 
-        ObjectInputStream inputStream;
+        String string;
+        
+           
 
         try {
-            fileInputStream = new FileInputStream(fileName + "1.lzw");
-            writer = new FileWriter(fileName + "2.txt");
-            inputStream = new ObjectInputStream(fileInputStream);
+            FileInputStream fileInputStream = new FileInputStream(fileName + "1.lzw"); //Extrae la ruta del archivo que anteriormente se comprimió, para empezar el proceso de descompresión.
+            FileWriter writer = new FileWriter(fileName + "2.txt"); //Se crea un archivo .txt en el cual se va a guardar el texto al ser descomprimido.
+            ObjectInputStream inputStream = new ObjectInputStream(fileInputStream); //Escribe la salida del método de descompresión en el archivo .txt anteriormente creado.
 
             System.out.print("\n\nDescomprimiendo...");
-            priorcode = inputStream.readInt();
-            writer.write(descomprimirDiccionario.get(priorcode).toString());
+            priorcode = inputStream.readInt(); //Se leen los códigos del archivo del diccionario
+            writer.write(descomprimirDiccionario.get(priorcode).toString()); //Se escriben los códigos del diccionario
             while ((codeword = inputStream.readInt()) != -1) {
                 if(codeword == 00)
                     break;
 
-                priorstr = descomprimirDiccionario.get(priorcode).toString();
+                priorstr = descomprimirDiccionario.get(priorcode).toString(); //Se pasa los códigos que se tiene en fomato en el HashMap en formato entero a formato String
 
+                //Se agregan  los códigos que faltan al HashMap
                 if (descomprimirDiccionario.containsKey(codeword)) {
-                    str = descomprimirDiccionario.get(codeword).toString();
-                    writer.write(str);
-                    descomprimirDiccionario.put(++dlastcode, priorstr + str.charAt(0));
+                    string = descomprimirDiccionario.get(codeword).toString();
+                    writer.write(string); //Se escriben los string, que corresponden a la concatenación del texto.
+                    descomprimirDiccionario.put(++dlastcode, priorstr + string.charAt(0));
                 } else {
                     descomprimirDiccionario.put(++dlastcode, priorstr + priorstr.charAt(0));
                     writer.write(priorstr + priorstr.charAt(0));
@@ -150,7 +191,8 @@ public class LZW {
 
             writer.close();
             fileInputStream.close();
-            System.out.println("\n"+descomprimirDiccionario);
+            System.out.println("\nDICCIONARIO:");
+            System.out.println(descomprimirDiccionario);
             System.out.print("\nHecho!!!");
             
 
@@ -159,11 +201,23 @@ public class LZW {
             System.out.println("\n\nError: " + ex.getMessage());
             System.out.print(codeword + " " + priorcode + " " + descomprimirDiccionario.get(133) + " " + dlastcode);
         }
+        
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
     public static void main(String args[]) {
         LZW lzw = new LZW();
-        lzw.comprimirArchivo();
-        lzw.descomprimirArchivo();
+        lzw.comprimirArchivo(); //Se ejecuta el método para comprimir el archivo original
+        lzw.descomprimirArchivo(); //Se ejecuta el método para descomprimir el archivo que anteriormente se comprimió
     }
 }
