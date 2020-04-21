@@ -20,6 +20,9 @@ public class LZW {
     String fileName = "files/texto.txt"; //fileName equivale a la ruta donde se encuentra el archivo original que va a ser comprimido
     int lastcode = 0; 
     int dlastcode = 0;
+    public static int CODASCII = 8; //Constante que hace referencia a los 8 bits con los que trabajamos en este codigo
+    double bitsoriginal = 0;
+    double bitscodified = 0;
 
     LZW() {
     	
@@ -39,11 +42,13 @@ public class LZW {
             																 //Se pasa por parámetro la ruta definida anteriormente en las variables
             
             InputStreamReader reader = new InputStreamReader(fileInputStream, "utf-8"); //Se encargada de leer el archivo anteriormente cargado en FileInputStream, 
-            																			//Esta lectura se hace mediante el formato utf-8
+            ArrayList<String> text = new ArrayList<String>();																			//Esta lectura se hace mediante el formato utf-8
             
             //Ciclo que agrega los códigos al diccionario cada que va realizando la lectura del archivo
             while ((code = (int) reader.read()) != -1) {
                 ch = (char) code;
+                text.add(ch + "");
+                
 
                 // En caso de que el código no se encuentre agragado en el HashMap correspondiente al diccionario, ya sea para comprimir o descomprimir,
                 // se agrega ese nuevo código
@@ -56,6 +61,13 @@ public class LZW {
                     }
                 }
             }
+            System.out.println("TEXTO:");
+            System.out.println(text);
+            System.out.println("\nTAMAÑO DEL TEXTO:");
+            System.out.println(text.size());
+           
+            bitsoriginal = text.size()*CODASCII; // BITS INFORMACION ORGINAL(PREGUNTA 1)
+            
             fileInputStream.close();
         } catch (Exception ex) {
             Logger.getLogger(LZW.class.getName()).log(Level.SEVERE, null, ex);
@@ -63,7 +75,9 @@ public class LZW {
     }
 
     
-    // Método para comprimir el archivo original
+    
+
+	// Método para comprimir el archivo original
     public void comprimirArchivo() {
         try {
         	
@@ -77,7 +91,7 @@ public class LZW {
             ArrayList<String> binaryCodes = new ArrayList<>();  //ArrayList que hace referencia a los códigos de salida, pero esta vez en formato binario.
             
 
-            System.out.print("Comprimiendo...");
+            System.out.print("\nComprimiendo...");
             FileInputStream fileInputStream = new FileInputStream(fileName); //Al igual que en el método crearDiccionario, se extrae la ruta del archivo original.
             InputStreamReader reader = new InputStreamReader(fileInputStream, "US-ASCII"); //Realiza la lectura del archivo anteriormente cargado.
             FileOutputStream fileOutputStream = new FileOutputStream(fileName + "1.lzw"); //Se crea un nuevo archivo formato .lzw en el cual se va a guardar el archivo comprimido.
@@ -122,6 +136,8 @@ public class LZW {
 
             System.out.println("\nDICCIONARIO: ");
             System.out.println(comprimirDiccionario); //Muestra por consola el diccionario obtenido en el proceso de compresión.
+            System.out.println("\nTAMAÑO DEL DICCIONARIO");
+            System.out.println(comprimirDiccionario.size());
             System.out.println("\nCÓDIGOS DE SALIDA EN DECIMAL");
             System.out.println(outputCodes); //Se imprime por consola los códigos de salida en formato decimal.
             System.out.println("\nTAMAÑO DEL ARRAYLIST DE CÓDIGOS DECIMALES");
@@ -143,6 +159,17 @@ public class LZW {
             
             System.out.println("\nTEXTO EN BINARIO (1 y 0)");
             System.out.println(texto);
+            
+            System.out.println("\nBITS INFORMACION ORGINAL(PREGUNTA 1):");
+            System.out.println(bitsoriginal);
+            
+            System.out.println("\nBITS DE LA INFORMACION CODIFICADA DEL TEXTO(PREGUNTA 2):");
+            double log = Math.log(comprimirDiccionario.size()) / Math.log(2); //Calculo de la informacion del texto al ser codificado
+            int logwceil = (int)Math.ceil(log);
+            System.out.println(bitscodified = logwceil * outputCodes.size());
+           
+            System.out.println("\nRELACION DE COMPRESION(PREGUNTA 3):");
+            System.out.println(bitsoriginal/bitscodified); //Calculo de la relacion de compresion
             
             System.out.print("\nHecho!!!");
            
